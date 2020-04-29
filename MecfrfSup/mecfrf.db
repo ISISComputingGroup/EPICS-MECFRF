@@ -27,10 +27,13 @@ record(ai, "$(P)SENSOR1:RAW") {
     field(SIOL, "$(P)SIM:SENSOR1")
     field(SDIS, "$(P)DISABLE")
     field(SSCN, ".1 second")
+    
+    field(FLNK, "$(P)_REFRESH_LAST_MESSAGE")
 }
 
 record(calc, "$(P)SENSOR1:CALC") {
     field(INPA, "$(P)SENSOR1:RAW CP MS")
+    field(INPB, "$(P)_READINGS_OUTDATED CP MS")
     field(CALC, "A/1000000")
 }
 
@@ -51,10 +54,13 @@ record(ai, "$(P)SENSOR2:RAW") {
     field(SIOL, "$(P)SIM:SENSOR2")
     field(SDIS, "$(P)DISABLE")
     field(SSCN, ".1 second")
+    
+    field(FLNK, "$(P)_REFRESH_LAST_MESSAGE")
 }
 
 record(calc, "$(P)SENSOR2:CALC") {
     field(INPA, "$(P)SENSOR2:RAW CP MS")
+    field(INPB, "$(P)_READINGS_OUTDATED CP MS")
     field(CALC, "A/1000000")
 }
 
@@ -62,6 +68,29 @@ record(ai, "$(P)SENSOR2") {
     field(INP, "$(P)SENSOR2:CALC CP MS")
     field(PREC, "6")
     field(EGU, "mm")
+}
+
+record(calcout, "$(P)_REFRESH_LAST_MESSAGE") {
+    field(INPA, "$(PVPREFIX)CS:IOC:$(IOCNAME):DEVIOS:GTIM_TIME")
+    field(CALC, "A")
+    field(OUT, "$(P)_LAST_VALID_MESSAGE_TIME PP MS")
+}
+
+record(ao, "$(P)_LAST_VALID_MESSAGE_TIME") {
+
+}
+
+record(calcout, "$(P)_READINGS_OUTDATED_CALC") {
+    field(INPA, "$(PVPREFIX)CS:IOC:$(IOCNAME):DEVIOS:GTIM_TIME CP")
+    field(INPB, "$(P)_LAST_VALID_MESSAGE_TIME CP")
+    field(CALC, "(A-B)>10")
+    field(OUT, "$(P)_READINGS_OUTDATED PP")
+}
+
+record(bo, "$(P)_READINGS_OUTDATED") {
+    field(ZNAM, "No")
+    field(ONAM, "Yes")
+    field(OSV, "INVALID")
 }
 
 
