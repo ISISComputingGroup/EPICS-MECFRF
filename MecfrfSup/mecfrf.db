@@ -28,7 +28,7 @@ record(ai, "$(P)SENSOR1:RAW") {
     field(SDIS, "$(P)DISABLE")
     field(SSCN, ".1 second")
     
-    field(FLNK, "$(P)_REFRESH_LAST_MESSAGE")
+    field(FLNK, "$(P)_REFRESH_LAST_VALID_MESSAGE")
 }
 
 record(calc, "$(P)SENSOR1:CALC") {
@@ -55,7 +55,7 @@ record(ai, "$(P)SENSOR2:RAW") {
     field(SDIS, "$(P)DISABLE")
     field(SSCN, ".1 second")
     
-    field(FLNK, "$(P)_REFRESH_LAST_MESSAGE")
+    field(FLNK, "$(P)_REFRESH_LAST_VALID_MESSAGE")
 }
 
 record(calc, "$(P)SENSOR2:CALC") {
@@ -70,14 +70,42 @@ record(ai, "$(P)SENSOR2") {
     field(EGU, "mm")
 }
 
+record(ai, "$(P)_ANYMESSAGE") {
+    field(PREC, "6")
+    field(EGU, "mm")
+    field(DTYP, "stream")
+    field(INP, "@mecfrf.proto getAnyMessage $(PORT)")
+    field(SCAN, "I/O Intr")
+    
+    field(FLNK, "$(P)_REFRESH_LAST_MESSAGE")
+}
+
+record(calcout, "$(P)_REFRESH_LAST_VALID_MESSAGE") {
+    field(INPA, "$(PVPREFIX)CS:IOC:$(IOCNAME):DEVIOS:GTIM_TIME")
+    field(CALC, "A")
+    field(OUT, "$(P)_LAST_VALID_MESSAGE_TIME PP")
+}
+
 record(calcout, "$(P)_REFRESH_LAST_MESSAGE") {
     field(INPA, "$(PVPREFIX)CS:IOC:$(IOCNAME):DEVIOS:GTIM_TIME")
     field(CALC, "A")
-    field(OUT, "$(P)_LAST_VALID_MESSAGE_TIME PP MS")
+    field(OUT, "$(P)_LAST_MESSAGE_TIME PP")
 }
 
-record(ao, "$(P)_LAST_VALID_MESSAGE_TIME") {
+record(ao, "$(P)_LAST_VALID_MESSAGE_TIME") {}
+record(ao, "$(P)_LAST_MESSAGE_TIME") {}
 
+record(calcout, "$(P)_GETTING_INVALID_MESSAGES") {
+    field(INPA, "$(P)_LAST_MESSAGE_TIME CP")
+    field(INPB, "$(P)_LAST_VALID_MESSAGE_TIME CP")
+    field(CALC, "ABS(A-B) > 10")  # if no valid messages in last 10 seconds we want to reset connection.
+    field(OOPT, "When Non-zero")
+    field(OUT, "$(P)_RESET_CONNECTION PP")
+}
+
+record(bo, "$(P)_RESET_CONNECTION") {
+    field(DTYP, "stream")
+    field(OUT, "@mecfrf.proto resetComms $(PORT)")
 }
 
 record(calcout, "$(P)_READINGS_OUTDATED_CALC") {
@@ -92,8 +120,6 @@ record(bo, "$(P)_READINGS_OUTDATED") {
     field(ONAM, "Yes")
     field(OSV, "INVALID")
 }
-
-
 
 # Simulation records
 

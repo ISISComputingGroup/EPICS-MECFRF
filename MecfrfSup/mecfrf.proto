@@ -1,4 +1,5 @@
 ReadTimeout = 100;
+MaxInput = 188;
 
 # Expected message structure:
 #   4 Bytes: ascii-coded string "DATA"
@@ -17,6 +18,12 @@ getSensor1 {
 
 getSensor2 {
     in "DATA" "%*#04r%*#04r%*#04r%*#04r%*#04r%*#04r" "%*#4r" "%#4r" "%*152r";
+}
+
+# This matches any sequence of 188 bytes. It is used to tell when the device is sending messages
+# but they are not what we expect.
+getAnyMessage {
+    in "%188r";
 }
 
 resetComms {
