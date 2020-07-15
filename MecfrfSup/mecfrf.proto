@@ -1,0 +1,33 @@
+ReadTimeout = 100;
+MaxInput = 188;
+
+# Expected message structure:
+#   4 Bytes: ascii-coded string "DATA"
+#  24 Bytes: Skip 6 little-endian 4-byte unsigned integers
+#   8 Bytes: 2 little-endian 4-byte unsigned integers which correspond to 
+#            the readings from sensors 1 and 2.
+# 152 Bytes: Skip 152 remaining bytes. Read into a fake "integer" because 
+#            %s or %c would stop on null bytes leaving unmatched input.
+#
+# Total message length: 188 bytes
+#
+    
+getSensor1 {
+    in "DATA" "%*#04r%*#04r%*#04r%*#04r%*#04r%*#04r" "%#4r" "%*#4r" "%*152r";
+}
+
+getSensor2 {
+    in "DATA" "%*#04r%*#04r%*#04r%*#04r%*#04r%*#04r" "%*#4r" "%#4r" "%*152r";
+}
+
+# This matches any sequence of 188 bytes. It is used to tell when the device is sending messages
+# but they are not what we expect.
+getAnyMessage {
+    in "%188r";
+}
+
+resetComms {
+    disconnect;
+    wait 1000;
+    connect 1000;
+}

@@ -1,0 +1,132 @@
+record(bo, "$(P)SIM")
+{
+    field(SCAN, "Passive")
+    field(DTYP, "Soft Channel")
+    field(ZNAM, "NO")
+    field(ONAM, "YES")
+    field(VAL, "$(RECSIM=0)")
+    field(PINI, "YES")
+}
+
+record(bo, "$(P)DISABLE")
+{
+    field(DESC, "Disable comms")
+    field(PINI, "YES")
+    field(VAL, "$(DISABLE=0)")
+    field(OMSL, "supervisory")
+    field(ZNAM, "COMMS ENABLED")
+    field(ONAM, "COMMS DISABLED")
+}
+
+record(ai, "$(P)SENSOR1:RAW") {
+    field(DTYP, "stream")
+    field(INP, "@mecfrf.proto getSensor1 $(PORT)")
+    field(SCAN, "I/O Intr")
+    
+    field(SIML, "$(P)SIM")
+    field(SIOL, "$(P)SIM:SENSOR1")
+    field(SDIS, "$(P)DISABLE")
+    field(SSCN, ".1 second")
+    
+    field(FLNK, "$(P)_REFRESH_LAST_VALID_MESSAGE")
+}
+
+record(calc, "$(P)SENSOR1:CALC") {
+    field(INPA, "$(P)SENSOR1:RAW CP MS")
+    field(INPB, "$(P)_READINGS_OUTDATED CP MS")
+    field(CALC, "A/1000000")
+}
+
+record(ai, "$(P)SENSOR1") {
+    field(INP, "$(P)SENSOR1:CALC CP MS")
+    field(PREC, "6")
+    field(EGU, "mm")
+}
+
+record(ai, "$(P)SENSOR2:RAW") {
+    field(PREC, "6")
+    field(EGU, "mm")
+    field(DTYP, "stream")
+    field(INP, "@mecfrf.proto getSensor2 $(PORT)")
+    field(SCAN, "I/O Intr")
+    
+    field(SIML, "$(P)SIM")
+    field(SIOL, "$(P)SIM:SENSOR2")
+    field(SDIS, "$(P)DISABLE")
+    field(SSCN, ".1 second")
+    
+    field(FLNK, "$(P)_REFRESH_LAST_VALID_MESSAGE")
+}
+
+record(calc, "$(P)SENSOR2:CALC") {
+    field(INPA, "$(P)SENSOR2:RAW CP MS")
+    field(INPB, "$(P)_READINGS_OUTDATED CP MS")
+    field(CALC, "A/1000000")
+}
+
+record(ai, "$(P)SENSOR2") {
+    field(INP, "$(P)SENSOR2:CALC CP MS")
+    field(PREC, "6")
+    field(EGU, "mm")
+}
+
+record(ai, "$(P)_ANYMESSAGE") {
+    field(PREC, "6")
+    field(EGU, "mm")
+    field(DTYP, "stream")
+    field(INP, "@mecfrf.proto getAnyMessage $(PORT)")
+    field(SCAN, "I/O Intr")
+    
+    field(FLNK, "$(P)_REFRESH_LAST_MESSAGE")
+}
+
+record(calcout, "$(P)_REFRESH_LAST_VALID_MESSAGE") {
+    field(INPA, "$(PVPREFIX)CS:IOC:$(IOCNAME):DEVIOS:GTIM_TIME")
+    field(CALC, "A")
+    field(OUT, "$(P)_LAST_VALID_MESSAGE_TIME PP")
+}
+
+record(calcout, "$(P)_REFRESH_LAST_MESSAGE") {
+    field(INPA, "$(PVPREFIX)CS:IOC:$(IOCNAME):DEVIOS:GTIM_TIME")
+    field(CALC, "A")
+    field(OUT, "$(P)_LAST_MESSAGE_TIME PP")
+}
+
+record(ao, "$(P)_LAST_VALID_MESSAGE_TIME") {}
+record(ao, "$(P)_LAST_MESSAGE_TIME") {}
+
+record(calcout, "$(P)_GETTING_INVALID_MESSAGES") {
+    field(INPA, "$(P)_LAST_MESSAGE_TIME CP")
+    field(INPB, "$(P)_LAST_VALID_MESSAGE_TIME CP")
+    field(CALC, "ABS(A-B) > 10")  # if no valid messages in last 10 seconds we want to reset connection.
+    field(OOPT, "When Non-zero")
+    field(OUT, "$(P)_RESET_CONNECTION PP")
+}
+
+record(bo, "$(P)_RESET_CONNECTION") {
+    field(DTYP, "stream")
+    field(OUT, "@mecfrf.proto resetComms $(PORT)")
+}
+
+record(calcout, "$(P)_READINGS_OUTDATED_CALC") {
+    field(INPA, "$(PVPREFIX)CS:IOC:$(IOCNAME):DEVIOS:GTIM_TIME CP")
+    field(INPB, "$(P)_LAST_VALID_MESSAGE_TIME CP")
+    field(CALC, "(A-B)>10")
+    field(OUT, "$(P)_READINGS_OUTDATED PP")
+}
+
+record(bo, "$(P)_READINGS_OUTDATED") {
+    field(ZNAM, "No")
+    field(ONAM, "Yes")
+    field(OSV, "INVALID")
+}
+
+# Simulation records
+
+record(ao, "$(P)SIM:SENSOR1:RAW") {
+    field(OUT, "$(P)SENSOR1 PP")
+}
+
+record(ao, "$(P)SIM:SENSOR2:RAW") {
+    field(OUT, "$(P)SENSOR2 PP")
+}
